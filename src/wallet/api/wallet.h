@@ -198,6 +198,13 @@ public:
     bool importTransaction(const std::string &txid, std::vector<uint64_t> &o_indices, uint64_t height, uint8_t block_version, uint64_t ts, bool miner_tx, bool pool, bool double_spend_seen) override;
     bool scanTransactions(const std::vector<std::string> &txids) override;
 
+    bool setupBackgroundSync(const BackgroundSyncType background_sync_type, const std::string &wallet_password, const optional<std::string> &background_cache_password = optional<std::string>()) override;
+    BackgroundSyncType getBackgroundSyncType() const override;
+    bool startBackgroundSync() override;
+    bool stopBackgroundSync(const std::string &wallet_password) override;
+    bool isBackgroundSyncing() const override;
+    bool isBackgroundWallet() const override;
+
     virtual std::string printBlockchain() override;
     virtual std::string printTransfers() override;
     virtual std::string printPayments() override;
@@ -285,6 +292,7 @@ private:
     bool isNewWallet() const;
     void pendingTxPostProcess(PendingTransactionImpl * pending);
     bool doInit(const std::string &daemon_address, const std::string &proxy_address, uint64_t upper_transaction_size_limit = 0, bool ssl = false);
+    bool checkBackgroundSync(const std::string &message) const;
 
 private:
     friend class PendingTransactionImpl;
@@ -302,6 +310,10 @@ private:
     mutable boost::mutex m_statusMutex;
     mutable int m_status;
     mutable std::string m_errorString;
+    // TODO: harden password handling in the wallet API, see relevant discussion
+    // https://github.com/monero-project/monero-gui/issues/1537
+    // https://github.com/feather-wallet/feather/issues/72#issuecomment-1405602142
+    // https://github.com/monero-project/monero/pull/8619#issuecomment-1632951461
     std::string m_password;
     std::unique_ptr<TransactionHistoryImpl> m_history;
     std::unique_ptr<Wallet2CallbackImpl> m_wallet2Callback;
