@@ -219,6 +219,8 @@
 
 #define DNS_BLOCKLIST_LIFETIME (86400 * 8)
 
+#define POLYSEED_COIN POLYSEED_MONERO
+
 //The limit is enough for the mandatory transaction content with 16 outputs (547 bytes),
 //a custom tag (1 byte) and up to 32 bytes of custom data for each recipient.
 // (1+32) + (1+1+16*32) + (1+16*32) = 1060
@@ -243,7 +245,8 @@ namespace config
     } }; // Bender's nightmare
   std::string const GENESIS_TX = "013c01ff0001ffffffffff1f029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd08807121012a1a936be5d91c01ee876e38c13fab0ee11cbe86011a2bf7740fb5ebd39d267d";
   uint32_t const GENESIS_NONCE = 70;
-
+  std::string const BACKGROUND_WALLET_SUFFIX = ".background";
+  
   // Hash domain separators
   const char HASH_KEY_BULLETPROOF_EXPONENT[] = "bulletproof";
   const char HASH_KEY_BULLETPROOF_PLUS_EXPONENT[] = "bulletproof_plus";
@@ -253,6 +256,8 @@ namespace config
   const unsigned char HASH_KEY_ENCRYPTED_PAYMENT_ID = 0x8d;
   const unsigned char HASH_KEY_WALLET = 0x8c;
   const unsigned char HASH_KEY_WALLET_CACHE = 0x8d;
+  const unsigned char HASH_KEY_BACKGROUND_CACHE = 0x8e;
+  const unsigned char HASH_KEY_BACKGROUND_KEYS_FILE = 0x8f;
   const unsigned char HASH_KEY_RPC_PAYMENT_NONCE = 0x58;
   const unsigned char HASH_KEY_MEMORY = 'k';
   const unsigned char HASH_KEY_MULTISIG[] = {'M', 'u', 'l', 't' , 'i', 's', 'i', 'g', 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };

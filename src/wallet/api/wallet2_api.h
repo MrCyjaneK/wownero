@@ -544,6 +544,12 @@ struct Wallet
         ConnectionStatus_WrongVersion
     };
 
+    enum BackgroundSyncType {
+        BackgroundSync_Off = 0,
+        BackgroundSync_ReusePassword = 1,
+        BackgroundSync_CustomPassword = 2
+    };
+
     virtual ~Wallet() = 0;
     virtual std::string seed(const std::string& seed_offset = "") const = 0;
     virtual std::string getSeedLanguage() const = 0;
@@ -720,6 +726,7 @@ struct Wallet
             result += unlockedBalance(i);
         return result;
     }
+    virtual uint64_t viewOnlyBalance(uint32_t accountIndex, const std::vector<std::string> &key_images = {}) const = 0;
 
    /**
     * @brief watchOnly - checks if wallet is watch only
@@ -799,6 +806,10 @@ struct Wallet
     static void info(const std::string &category, const std::string &str);
     static void warning(const std::string &category, const std::string &str);
     static void error(const std::string &category, const std::string &str);
+
+    virtual bool getPolyseed(std::string &seed, std::string &passphrase) const = 0;
+    static bool createPolyseed(std::string &seed_words, std::string &err, const std::string &language = "English");
+    static std::vector<std::pair<std::string, std::string>> getPolyseedLanguages();
 
    /**
     * @brief StartRefresh - Start/resume refresh thread (refresh every 10 seconds)
@@ -1035,6 +1046,8 @@ struct Wallet
     virtual uint64_t estimateTransactionFee(const std::vector<std::pair<std::string, uint64_t>> &destinations,
                                             PendingTransaction::Priority priority) const = 0;
 
+    virtual bool hasUnknownKeyImages() const = 0;
+
    /*!
     * \brief exportKeyImages - exports key images to file
     * \param filename
@@ -1070,6 +1083,43 @@ struct Wallet
      * \return                 - true on success
      */
     virtual bool scanTransactions(const std::vector<std::string> &txids) = 0;
+
+    /*!
+     * \brief setupBackgroundSync       - setup background sync mode with just a view key
+     * \param background_sync_type      - the mode the wallet background syncs in
+     * \param wallet_password
+     * \param background_cache_password - custom password to encrypt background cache, only needed for custom password background sync type
+     * \return                          - true on success
+     */
+    virtual bool setupBackgroundSync(const BackgroundSyncType background_sync_type, const std::string &wallet_password, const optional<std::string> &background_cache_password) = 0;
+
+    /*!
+     * \brief getBackgroundSyncType     - get mode the wallet background syncs in
+     * \return                          - the type, or off if type is unknown
+     */
+    virtual BackgroundSyncType getBackgroundSyncType() const = 0;
+
+    /**
+     * @brief startBackgroundSync - sync the chain in the background with just view key
+     */
+    virtual bool startBackgroundSync() = 0;
+
+    /**
+     * @brief stopBackgroundSync  - bring back spend key and process background synced txs
+     * \param wallet_password
+     */
+    virtual bool stopBackgroundSync(const std::string &wallet_password) = 0;
+
+    /**
+     * @brief isBackgroundSyncing - returns true if the wallet is background syncing
+     */
+    virtual bool isBackgroundSyncing() const = 0;
+
+    /**
+     * @brief isBackgroundWallet - returns true if the wallet is a background wallet
+     */
+    virtual bool isBackgroundWallet() const = 0;
+
 
     virtual std::string printBlockchain() = 0;
     virtual std::string printTransfers() = 0;
@@ -1431,6 +1481,27 @@ struct WalletManager
                                             const std::string &subaddressLookahead = "",
                                             uint64_t kdf_rounds = 1,
                                             WalletListener * listener = nullptr) = 0;
+
+    /*!
+     * \brief creates a wallet from a polyseed mnemonic phrase
+     * \param path                         Name of the wallet file to be created
+     * \param password                     Password of wallet file
+     * \param nettype                      Network type
+     * \param mnemonic                     Polyseed mnemonic
+     * \param passphrase                   Optional seed offset passphrase
+     * \param newWallet                    Whether it is a new wallet
+     * \param restoreHeight                Override the embedded restore height
+     * \param kdf_rounds                   Number of rounds for key derivation function
+     * @return
+     */
+    virtual Wallet * createWalletFromPolyseed(const std::string &path,
+                                              const std::string &password,
+                                              NetworkType nettype,
+                                              const std::string &mnemonic,
+                                              const std::string &passphrase = "",
+                                              bool newWallet = true,
+                                              uint64_t restore_height = 0,
+                                              uint64_t kdf_rounds = 1) = 0;
 
     /*!
      * \brief Closes wallet. In case operation succeeded, wallet object deleted. in case operation failed, wallet object not deleted

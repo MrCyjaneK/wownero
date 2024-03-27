@@ -124,8 +124,8 @@ jobs:
     - name: build
       run: |
         ${{env.CCACHE_SETTINGS}}
-        cmake .
-        make wallet_api -j3
+        cmake -S . -B build
+        cmake --build build wallet_api -j3
 
   test-ubuntu:
     needs: build-ubuntu

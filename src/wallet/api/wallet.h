@@ -86,9 +86,19 @@ public:
     bool recoverFromDevice(const std::string &path,
                            const std::string &password,
                            const std::string &device_name);
+
+    bool createFromPolyseed(const std::string &path,
+                             const std::string &password,
+                             const std::string &seed,
+                             const std::string &passphrase = "",
+                             bool newWallet = true,
+                             uint64_t restoreHeight = 0);
+
     Device getDeviceType() const override;
     bool close(bool store = true);
     std::string seed(const std::string& seed_offset = "") const override;
+    bool getPolyseed(std::string &seed_words, std::string &passphrase) const override;
+
     std::string getSeedLanguage() const override;
     void setSeedLanguage(const std::string &arg) override;
     // void setListener(Listener *) {}
@@ -120,6 +130,7 @@ public:
     bool setProxy(const std::string &address) override;
     uint64_t balance(uint32_t accountIndex = 0) const override;
     uint64_t unlockedBalance(uint32_t accountIndex = 0) const override;
+    uint64_t viewOnlyBalance(uint32_t accountIndex, const std::vector<std::string> &key_images) const override;
     uint64_t blockChainHeight() const override;
     uint64_t approximateBlockChainHeight() const override;
     uint64_t estimateBlockChainHeight() const override;
@@ -180,6 +191,7 @@ public:
     virtual UnsignedTransaction * loadUnsignedTx(const std::string &unsigned_filename) override;
     virtual UnsignedTransaction * loadUnsignedTxFromStr(const std::string &unsigned_tx) override;
     virtual UnsignedTransaction * loadUnsignedTxFromBase64Str(const std::string &unsigned_tx) override;
+    bool hasUnknownKeyImages() const override;
     virtual PendingTransaction * loadSignedTx(const std::string &signed_filename) override;
     bool exportKeyImages(const std::string &filename, bool all = false) override;
     bool importKeyImages(const std::string &filename) override;
@@ -187,6 +199,13 @@ public:
     bool importOutputs(const std::string &filename) override;
     bool importTransaction(const std::string &txid, std::vector<uint64_t> &o_indices, uint64_t height, uint8_t block_version, uint64_t ts, bool miner_tx, bool pool, bool double_spend_seen) override;
     bool scanTransactions(const std::vector<std::string> &txids) override;
+
+    bool setupBackgroundSync(const BackgroundSyncType background_sync_type, const std::string &wallet_password, const optional<std::string> &background_cache_password = optional<std::string>()) override;
+    BackgroundSyncType getBackgroundSyncType() const override;
+    bool startBackgroundSync() override;
+    bool stopBackgroundSync(const std::string &wallet_password) override;
+    bool isBackgroundSyncing() const override;
+    bool isBackgroundWallet() const override;
 
     virtual std::string printBlockchain() override;
     virtual std::string printTransfers() override;
@@ -275,6 +294,7 @@ private:
     bool isNewWallet() const;
     void pendingTxPostProcess(PendingTransactionImpl * pending);
     bool doInit(const std::string &daemon_address, const std::string &proxy_address, uint64_t upper_transaction_size_limit = 0, bool ssl = false);
+    bool checkBackgroundSync(const std::string &message) const;
 
 private:
     friend class PendingTransactionImpl;
@@ -292,6 +312,10 @@ private:
     mutable boost::mutex m_statusMutex;
     mutable int m_status;
     mutable std::string m_errorString;
+    // TODO: harden password handling in the wallet API, see relevant discussion
+    // https://github.com/monero-project/monero-gui/issues/1537
+    // https://github.com/feather-wallet/feather/issues/72#issuecomment-1405602142
+    // https://github.com/monero-project/monero/pull/8619#issuecomment-1632951461
     std::string m_password;
     std::unique_ptr<TransactionHistoryImpl> m_history;
     std::unique_ptr<Wallet2CallbackImpl> m_wallet2Callback;
