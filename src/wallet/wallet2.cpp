@@ -2091,10 +2091,19 @@ bool wallet2::frozen(const multisig_tx_set& txs) const
 
   return false;
 }
+void wallet2::freeze(const crypto::public_key &pk)
+{
+  freeze(get_transfer_details(pk));
+}
 //----------------------------------------------------------------------------------------------------
 void wallet2::freeze(const crypto::key_image &ki)
 {
   freeze(get_transfer_details(ki));
+}
+//----------------------------------------------------------------------------------------------------
+void wallet2::thaw(const crypto::public_key &pk)
+{
+  thaw(get_transfer_details(pk));
 }
 //----------------------------------------------------------------------------------------------------
 void wallet2::thaw(const crypto::key_image &ki)
@@ -2105,6 +2114,18 @@ void wallet2::thaw(const crypto::key_image &ki)
 bool wallet2::frozen(const crypto::key_image &ki) const
 {
   return frozen(get_transfer_details(ki));
+}
+//----------------------------------------------------------------------------------------------------
+size_t wallet2::get_transfer_details(const crypto::public_key &pk) const
+{
+    for (size_t idx = 0; idx < m_transfers.size(); ++idx)
+    {
+        const transfer_details &td = m_transfers[idx];
+        if (td.get_public_key() == pk) {
+            return idx;
+        }
+    }
+    CHECK_AND_ASSERT_THROW_MES(false, "Public key not found");
 }
 //----------------------------------------------------------------------------------------------------
 size_t wallet2::get_transfer_details(const crypto::key_image &ki) const

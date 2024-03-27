@@ -1562,6 +1562,7 @@ private:
     uint64_t get_num_rct_outputs();
     size_t get_num_transfer_details() const { return m_transfers.size(); }
     const transfer_details &get_transfer_details(size_t idx) const;
+    size_t get_transfer_details(const crypto::public_key &pk) const;
 
     uint8_t get_current_hard_fork();
     void get_hard_fork_info(uint8_t version, uint64_t &earliest_height);
@@ -1792,7 +1793,9 @@ private:
     void freeze(size_t idx);
     void thaw(size_t idx);
     bool frozen(size_t idx) const;
+    void freeze(const crypto::public_key &pk);
     void freeze(const crypto::key_image &ki);
+    void thaw(const crypto::public_key &pk);
     void thaw(const crypto::key_image &ki);
     bool frozen(const crypto::key_image &ki) const;
     bool frozen(const transfer_details &td) const;
